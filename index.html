@@ -639,7 +639,7 @@ function updateProg(sec) {
 
 function playerTotal(pid) {
   let n = 0;
-  ALL_SECS.forEach(sec => sec.eggs.forEach((_, ei) => { if (ck(sec.id, ei, pid)) n++; }));
+  [...FAMILY_SECS, ...ISLAND_SECS].forEach(sec => sec.eggs.forEach((_, ei) => { if (ck(sec.id, ei, pid)) n++; }));
   n += B.filter(f => f.pid === pid).length * 2;
   return n;
 }
@@ -771,7 +771,6 @@ function buildScorecard() {
   }
 
   const fSub = renderGroup(FAMILY_SECS, '🏰 Family Hunt (All Ages)', '#1a5c38');
-  const nSub = renderGroup(NIGHT_SECS, '🌙 Nightclubs', '#6b2d8b');
   const iSub = renderGroup(ISLAND_SECS, '🏝️ Castaway Cay Island', '#0077b6');
 
   const bt = document.createElement('div'); bt.className = 'sc-section-title'; bt.style.color = 'var(--gold)'; bt.textContent = '⭐ Bonus Finds (2 pts each)'; el.appendChild(bt);
@@ -789,7 +788,7 @@ function buildScorecard() {
     });
   }
 
-  const grand = PLAYERS.map((_, i) => fSub[i] + nSub[i] + iSub[i] + bTotals[i]);
+  const grand = PLAYERS.map((_, i) => fSub[i] + iSub[i] + bTotals[i]);
   const tr = document.createElement('div'); tr.className = 'sc-row total';
   const tz = document.createElement('div'); tz.className = 'sc-zone'; tz.style.color = 'var(--gold)'; tz.textContent = '⭐ GRAND TOTAL'; tr.appendChild(tz);
   const ts = document.createElement('div'); ts.className = 'sc-scores';
@@ -800,9 +799,11 @@ function buildScorecard() {
   if (maxScore > 0) {
     const wi = grand.indexOf(maxScore); const wp = PLAYERS[wi];
     const wb = document.createElement('div'); wb.className = 'winner-box';
-    wb.innerHTML = `<div class="crown">${wp.emoji}</div><div class="wname">Current Leader: ${wp.name}!</div><div class="wsub">${maxScore} eggs found · Keep hunting! 🎉</div>`;
+    wb.innerHTML = `<div class="crown">${wp.emoji}</div><div class="wname">Current Leader: ${wp.name}!</div><div class="wsub">${maxScore} pts · Keep hunting! 🎉</div>`;
     el.appendChild(wb);
   }
+
+  renderGroup(NIGHT_SECS, '🌙 Parent Bonus — Nightclubs', '#6b2d8b');
 
   const dr = document.createElement('div'); dr.className = 'data-row';
   const eb = document.createElement('button'); eb.className = 'd-btn export'; eb.textContent = '⬇ Export Progress'; eb.onclick = exportData;
