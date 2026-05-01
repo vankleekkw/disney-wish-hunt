@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Wish Hunt">
+<title>Disney Wish Easter Egg Hunt</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@300;400;700&display=swap');
+:root {
+  --bg:#0a0f2e; --card:#111840; --border:rgba(201,168,76,0.25);
+  --gold:#c9a84c; --gold-lt:#f5e09a; --text:#e8eaf6; --muted:#9aa0c0;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* HEADER */
+.header{position:sticky;top:0;z-index:100;background:rgba(8,12,40,0.97);border-bottom:1px solid var(--border);padding:10px 16px 0;backdrop-filter:blur(8px);}
+.header-title{font-family:'Cinzel',serif;font-size:15px;color:var(--gold);letter-spacing:.08em;text-align:center;}
+.header-sub{font-size:10px;color:var(--muted);text-align:center;margin-top:2px;}
+.score-strip{display:flex;gap:5px;padding:8px 4px;justify-content:center;flex-wrap:wrap;}
+.score-chip{display:flex;align-items:center;gap:4px;border:1px solid;border-radius:20px;padding:3px 9px;font-size:12px;font-weight:700;min-width:60px;justify-content:center;cursor:pointer;}
+.score-chip:active{opacity:.7;}
+.score-chip .edit-hint{font-size:8px;opacity:.6;margin-left:2px;}
+.tabs{display:flex;border-bottom:1px solid var(--border);overflow-x:auto;}
+.tab{flex:1;padding:9px 4px;text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;min-width:0;}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+
+/* PANELS */
+.panel{display:none;padding-bottom:90px;}
+.panel.active{display:block;}
+
+/* HINT BOX */
+.hint-box{margin:10px 12px 4px;padding:10px 12px;border-radius:8px;font-size:11px;line-height:1.5;}
+.hint-box strong{display:block;margin-bottom:3px;font-size:12px;}
+.hint-install{background:rgba(0,60,150,0.2);border:1px solid rgba(100,150,255,0.25);color:#aac4ff;}
+.hint-night{background:rgba(60,10,90,0.3);border:1px solid rgba(200,150,255,0.3);color:#ddb3ff;}
+.hint-island{background:rgba(0,100,50,0.2);border:1px solid rgba(0,200,100,0.3);color:#a0f0c0;}
+
+/* SECTION */
+.sec-hdr{margin:10px 12px 3px;padding:9px 12px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;}
+.sec-hdr h2{font-family:'Cinzel',serif;font-size:11px;font-weight:700;flex:1;}
+.sec-pts{font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;background:rgba(255,255,255,0.12);}
+.prog-wrap{height:3px;background:rgba(255,255,255,0.1);border-radius:2px;margin-top:5px;}
+.prog-fill{height:100%;border-radius:2px;transition:width .4s;}
+
+/* EGG CARD */
+.egg-card{margin:3px 12px;background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.egg-card.all-found{border-color:var(--gold);}
+.egg-info{padding:8px 12px 4px;}
+.egg-name{font-size:13px;font-weight:700;line-height:1.3;}
+.egg-hint{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4;}
+.egg-btns{display:flex;padding:4px 8px 8px;gap:4px;flex-wrap:wrap;}
+.p-btn{flex:1;min-width:40px;padding:7px 2px;border-radius:7px;border:1.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.35);font-size:10px;font-weight:700;cursor:pointer;text-align:center;transition:all .15s;user-select:none;}
+.p-btn:active{transform:scale(.9);}
+.p-btn.on{color:#fff;}
+
+/* BONUS CARD */
+.bonus-card{margin:3px 12px;padding:9px 12px;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);border-radius:10px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.bonus-info{flex:1;}
+.bonus-name{font-size:13px;font-weight:700;color:var(--gold-lt);}
+.bonus-meta{font-size:11px;color:var(--muted);margin-top:2px;}
+.bonus-pts{font-size:12px;font-weight:700;color:var(--gold);}
+
+/* FAB */
+.fab{position:fixed;bottom:22px;right:18px;z-index:200;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#906010);border:none;color:#000;font-size:28px;cursor:pointer;box-shadow:0 4px 18px rgba(201,168,76,0.45);display:flex;align-items:center;justify-content:center;transition:transform .15s;}
+.fab:active{transform:scale(.88);}
+.fab.hidden{display:none;}
+
+/* OVERLAY + SHEETS */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:300;align-items:flex-end;justify-content:center;}
+.overlay.open{display:flex;}
+.sheet{background:#141c3a;border:1px solid var(--border);border-radius:18px 18px 0 0;padding:20px 18px 36px;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;animation:up .22s ease;}
+@keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet-title{font-family:'Cinzel',serif;font-size:14px;color:var(--gold);text-align:center;margin-bottom:16px;letter-spacing:.08em;}
+.field{margin-bottom:13px;}
+.field label{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--muted);text-transform:uppercase;margin-bottom:5px;}
+.field input,.field select{width:100%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:var(--text);font-family:'Lato',sans-serif;font-size:14px;padding:10px 12px;outline:none;-webkit-appearance:none;}
+.field select option{background:#141c3a;}
+.field input:focus,.field select:focus{border-color:var(--gold);}
+.modal-players{display:flex;gap:6px;flex-wrap:wrap;}
+.mp-btn{flex:1;min-width:56px;padding:9px 4px;border-radius:8px;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.4);font-size:11px;font-weight:700;cursor:pointer;text-align:center;transition:all .15s;}
+.mp-btn.on{color:#fff;}
+.modal-actions{display:flex;gap:10px;margin-top:18px;}
+.m-btn{flex:1;padding:12px;border-radius:10px;border:none;font-family:'Lato',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
+.m-btn.cancel{background:rgba(255,255,255,0.08);color:var(--muted);}
+.m-btn.confirm{background:linear-gradient(135deg,var(--gold),#906010);color:#000;}
+
+/* SETUP SCREEN */
+.setup-overlay{align-items:center;background:rgba(5,8,25,0.98);z-index:500;}
+.setup-sheet{background:#0d1530;border:1px solid var(--border);border-radius:18px;padding:24px 20px 32px;width:calc(100% - 32px);max-width:460px;max-height:92vh;overflow-y:auto;}
+.setup-logo{font-family:'Cinzel',serif;font-size:15px;color:var(--gold);text-align:center;letter-spacing:.1em;margin-bottom:4px;}
+.setup-sub{font-size:11px;color:var(--muted);text-align:center;margin-bottom:20px;line-height:1.5;}
+.count-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;margin-top:6px;}
+.count-btn{padding:9px 0;border-radius:8px;border:1.5px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:var(--muted);font-family:'Lato',sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-align:center;transition:all .15s;}
+.count-btn.sel{background:rgba(201,168,76,0.2);border-color:var(--gold);color:var(--gold);}
+.setup-player-row{display:flex;align-items:center;gap:7px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06);}
+.setup-player-row:last-of-type{border-bottom:none;}
+.setup-color-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.setup-name-input{flex:1;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:var(--text);font-family:'Lato',sans-serif;font-size:13px;padding:7px 10px;outline:none;min-width:0;}
+.setup-name-input:focus{border-color:var(--gold);}
+.emoji-input{width:46px;height:38px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;font-size:20px;text-align:center;color:var(--text);cursor:pointer;-webkit-appearance:none;outline:none;padding:0;flex-shrink:0;}
+.emoji-input:focus{border-color:var(--gold);}
+.color-swatches{display:flex;gap:3px;flex-shrink:0;}
+.swatch{width:16px;height:16px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s;}
+.swatch.sel{border-color:#fff;transform:scale(1.3);}
+.setup-start-btn{display:block;width:100%;padding:14px;border-radius:11px;border:none;background:linear-gradient(135deg,var(--gold),#906010);color:#000;font-family:'Lato',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:22px;}
+
+/* PLAYER EDIT SHEET */
+.player-edit-row{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06);}
+.player-edit-row:last-of-type{border-bottom:none;}
+.player-color-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.player-edit-label{font-size:13px;font-weight:700;flex:1;}
+.emoji-hint{font-size:10px;color:var(--muted);text-align:center;margin-bottom:14px;line-height:1.5;}
+.p-done-btn{display:block;width:100%;padding:13px;border-radius:11px;border:none;background:linear-gradient(135deg,var(--gold),#906010);color:#000;font-family:'Lato',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:18px;}
+
+/* SCORECARD */
+.scorecard{padding:12px 12px 20px;}
+.sc-section-title{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:10px 0 6px;border-bottom:1px solid var(--border);margin-bottom:8px;}
+.sc-hdr-row,.sc-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px;}
+.sc-row.sub{font-weight:700;border-bottom:1px solid rgba(255,255,255,0.12);}
+.sc-row.total{font-weight:700;font-size:13px;border-top:1px solid var(--gold);border-bottom:none;margin-top:8px;padding-top:10px;}
+.sc-zone{color:var(--muted);flex:1;padding-right:8px;font-size:11px;}
+.sc-scores{display:flex;gap:4px;}
+.sc-val{min-width:24px;text-align:center;font-weight:700;font-size:12px;}
+.winner-box{margin:14px 0 8px;padding:14px 12px;background:linear-gradient(135deg,#1a1000,#2a1f00);border:1px solid var(--gold);border-radius:12px;text-align:center;}
+.winner-box .crown{font-size:30px;}
+.winner-box .wname{font-family:'Cinzel',serif;font-size:16px;color:var(--gold);margin:6px 0 3px;}
+.winner-box .wsub{font-size:12px;color:var(--muted);}
+.data-row{display:flex;gap:10px;margin:14px 0 4px;}
+.d-btn{flex:1;padding:11px 8px;border-radius:9px;font-family:'Lato',sans-serif;font-size:12px;font-weight:700;cursor:pointer;text-align:center;}
+.d-btn:active{opacity:.7;}
+.d-btn.export{border:1px solid rgba(201,168,76,0.4);background:rgba(201,168,76,0.1);color:var(--gold-lt);}
+.d-btn.import{border:1px solid rgba(100,200,255,0.3);background:rgba(0,120,200,0.1);color:#aad4ff;}
+.d-note{font-size:10px;color:var(--muted);text-align:center;line-height:1.5;margin-bottom:10px;}
+.reset-btn{display:block;width:100%;margin-top:16px;padding:11px;background:transparent;border:1px solid rgba(255,80,80,0.25);border-radius:8px;color:rgba(255,100,100,0.55);font-family:'Lato',sans-serif;font-size:12px;font-weight:700;cursor:pointer;}
+
+/* PASS ALONG / SHARE TAB */
+.passalong{padding:20px 16px 40px;text-align:center;}
+.pa-title{font-family:'Cinzel',serif;font-size:17px;color:var(--gold);letter-spacing:.08em;margin-bottom:4px;}
+.pa-sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.6;}
+.qr-wrap{display:inline-block;background:#fff;padding:12px;border-radius:14px;margin-bottom:10px;box-shadow:0 4px 24px rgba(201,168,76,0.2);}
+.qr-wrap img{display:block;width:220px;height:220px;}
+.pa-url{font-size:10px;color:var(--muted);word-break:break-all;margin-bottom:16px;padding:0 12px;}
+.pa-tip{font-size:11px;color:var(--muted);background:rgba(0,60,150,0.15);border:1px solid rgba(100,150,255,0.2);border-radius:8px;padding:10px 12px;margin-bottom:16px;line-height:1.6;text-align:left;}
+.pa-scores{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:20px;text-align:left;}
+.pa-scores-title{font-family:'Cinzel',serif;font-size:12px;color:var(--gold);letter-spacing:.06em;margin-bottom:12px;text-align:center;}
+.pa-score-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:14px;font-weight:700;}
+.pa-score-row:last-of-type{border-bottom:none;}
+.pa-score-name{display:flex;align-items:center;gap:8px;}
+.pa-score-pts{font-size:15px;}
+.pa-credit{font-size:11px;color:var(--muted);line-height:1.9;border-top:1px solid var(--border);padding-top:16px;margin-top:4px;}
+.pa-credit strong{color:var(--gold-lt);font-size:12px;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-title">✨ Disney Wish Easter Egg Hunt ✨</div>
+  <div class="header-sub" id="headerSub">Disney Wish · Jun 1–5, 2026</div>
+  <div class="score-strip" id="scoreStrip"></div>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('family',this)">🏰 Family</div>
+    <div class="tab" onclick="switchTab('night',this)">🌙 Nightclubs</div>
+    <div class="tab" onclick="switchTab('island',this)">🏝️ Island</div>
+    <div class="tab" onclick="switchTab('scores',this)">🏆 Scores</div>
+    <div class="tab" onclick="switchTab('share',this)">📲 Share</div>
+  </div>
+</div>
+
+<div class="panel active" id="panel-family">
+  <div class="hint-box hint-install"><strong>📱 Save to your Home Screen!</strong>iPhone: tap Share → "Add to Home Screen" · Android: tap ⋮ → "Add to Home Screen"</div>
+</div>
+<div class="panel" id="panel-night">
+  <div class="hint-box hint-night"><strong>🌙 Nightclubs &amp; Adult Venues</strong>Most venues open to all guests during the day. Check the Navigator app for evening hours each day.</div>
+</div>
+<div class="panel" id="panel-island">
+  <div class="hint-box hint-island"><strong>🏝️ Castaway Cay — Disney's Private Island</strong>All eggs below are on dry land — phones welcome! Leave yours safe and dry during snorkeling.</div>
+</div>
+<div class="panel" id="panel-scores">
+  <div class="scorecard" id="scorecardEl"></div>
+</div>
+<div class="panel" id="panel-share">
+  <div class="passalong" id="passalongEl"></div>
+</div>
+
+<button class="fab hidden" id="fab" onclick="openBonusModal()">＋</button>
+
+<!-- BONUS MODAL -->
+<div class="overlay" id="bonusOverlay">
+  <div class="sheet">
+    <div class="sheet-title">⭐ Log a Bonus Find — 2 pts</div>
+    <div class="field"><label>What did you find?</label><input id="mDesc" placeholder="e.g. Hidden Mickey behind the bar" maxlength="80"></div>
+    <div class="field"><label>Where on the ship / island?</label><select id="mLoc"></select></div>
+    <div class="field"><label>Who found it?</label><div class="modal-players" id="mPlayers"></div></div>
+    <div class="modal-actions">
+      <button class="m-btn cancel" onclick="closeBonusModal()">Cancel</button>
+      <button class="m-btn confirm" onclick="saveBonus()">Save +2 pts</button>
+    </div>
+  </div>
+</div>
+
+<!-- PLAYER SETTINGS MODAL -->
+<div class="overlay" id="playerOverlay">
+  <div class="sheet">
+    <div class="sheet-title">✏️ Customize Icons</div>
+    <div class="emoji-hint">Tap any emoji box, then open your emoji keyboard<br>(iPhone: 🌐 key · Android: emoji button)</div>
+    <div id="playerEditRows"></div>
+    <button class="p-done-btn" onclick="savePlayerSettings()">Done ✓</button>
+  </div>
+</div>
+
+<!-- SETUP SCREEN — shown on first launch -->
+<div class="overlay setup-overlay open" id="setupOverlay">
+  <div class="setup-sheet">
+    <div class="setup-logo">✨ Disney Wish Easter Egg Hunt ✨</div>
+    <div class="setup-sub">Jun 1–5, 2026 · Disney Wish<br>Set up your group to start hunting!</div>
+    <div class="field">
+      <label>Your Group Name</label>
+      <input id="setupGroupName" placeholder="e.g. The Johnson Family" maxlength="40">
+    </div>
+    <div class="field">
+      <label>Number of Hunters (1–8)</label>
+      <div class="count-grid" id="countGrid"></div>
+    </div>
+    <div class="field" id="playerSetupField">
+      <label>Name · Icon · Color</label>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:10px;">Tap the emoji box to change · tap a dot to pick color</div>
+      <div id="setupPlayerRows"></div>
+    </div>
+    <button class="setup-start-btn" onclick="commitSetup()">Start the Hunt! 🎉</button>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────
+//  CONFIG — edit these to update the event
+// ─────────────────────────────────────────
+const SHIP_DATE  = 'Jun 1–5, 2026';
+const CREDIT_LINE = 'Courtesy of the VanKleek Family · Stateroom 8570 · Elmhurst, IL';
+
+const PALETTE    = ['#4da6ff','#00c8d7','#e63946','#ff69b4','#2dc653','#ff8c00','#9b59b6','#f0b429'];
+const DEF_EMOJIS = ['⭐','🌟','✨','💫','🎯','🏆','🎪','🎨'];
+
+const SETUP_KEY  = 'wish_setup_v1';
+const STATE_KEY  = 'wish_state_v1';
+const BONUS_KEY  = 'wish_bonus_v1';
+
+// ─────────────────────────────────────────
+//  LOCATIONS
+// ─────────────────────────────────────────
+const SHIP_LOCS = [
+  'Outside the Ship','Deck 3 — Grand Hall','Deck 3 — Wonderland Cinema',
+  'Deck 3 — Near Restaurant 1923','Deck 3 — Nightingale\'s','Deck 3 — The Bayou',
+  'Deck 3 — Star Wars Hyperspace Lounge','Deck 4 — Wishing Star Café',
+  'Decks 4–5 — Luna','Deck 5 — Keg & Compass','Stairwells & Corridors',
+  'Deck 11 — Arendelle Dining','Deck 12 — Hook\'s Barbery / Secret Bar',
+  'Deck 12 — The Rose / Enchante / Palo','Deck 13 — Quiet Cove / Cove Café',
+  'Deck 15 — Observation Deck / Senses Spa','Marceline Market',
+  'Bibbidi Bobbidi Boutique','Pool Deck',
+  'Castaway Cay — On Land','Castaway Cay — Heads Up Bar',
+  'Castaway Cay — Cookie\'s BBQ','Castaway Cay — Observation Tower',
+  'Nassau','Other / Unsure',
+];
+
+// ─────────────────────────────────────────
+//  EGG DATA
+// ─────────────────────────────────────────
+const FAMILY_SECS = [
+  { id:'outside', title:'Outside — Before You Board!', color:'#003087', eggs:[
+    ['Rapunzel & Pascal on the Stern','Back of ship — her hair frames "Disney Wish" as she paints it; Pascal grins alongside'],
+    ['Captain Minnie Mouse on the Bow','Front of ship — first female Disney character to captain a DCL vessel'],
+    ['Hidden Mickeys in Bow Scroll Pattern','The decorative hull scroll hides Mickey & Pluto silhouettes — use binoculars!'],
+    ['Fun Fact: Rapunzel = 1st Princess on a DCL Stern','Prior sterns: Goofy, Donald+Huey, Sorcerer Mickey, Dumbo, Peter Pan & Hook'],
+  ]},
+  { id:'grandhall', title:'Deck 3 — The Grand Hall', color:'#6b2d8b', eggs:[
+    ['Chandelier = Cinderella\'s Dress Upside-Down','Look UP the moment you enter — the Fairy Godmother\'s transformation spell'],
+    ['5 Stars Around the Chandelier','4 surrounding = Magic, Wonder, Dream, Fantasy; brightest top star = the Wish'],
+    ['Glass Slipper at Staircase Base','Bottom of the grand staircase — exactly where Cinderella lost hers'],
+    ['Lucifer Cat Stalking Jaq & Gus','Behind Cinderella\'s statue — mice peek from under her dress while the cat lunges'],
+    ['"Glass Slipper Kiss Goodnight" at 10 PM','Each night: chandelier lights up, clock tolls, and "So This Is Love" plays'],
+    ['Hidden Wayfinding System in the Carpets','The carpet patterns are a navigation system — look for subtle directional cues'],
+    ['Woodland Creatures on Forward Elevators','Squirrels and rabbits carved into the forward elevator surrounds'],
+    ['Cinderella Motifs on Aft Elevators','Pumpkin, coach, Jaq, Gus, and a bluebird on the aft elevator surrounds'],
+  ]},
+  { id:'wonderland', title:'Deck 3 — Wonderland Cinema', color:'#007b8a', eggs:[
+    ['Talking Doorknob from Alice in Wonderland','The cinema entrance doorknob is the iconic talking doorknob that guided Alice'],
+    ['All Doorknobs Inside the Theater Match','Every single doorknob in the theater is the same Alice in Wonderland style'],
+    ['Cheshire Cat Glowing Eyes in the Walls','Glowing eyes and teeth embedded in the cinema walls — blink and you\'ll miss them'],
+    ['Playing Card Suit Motifs Throughout','Card suits woven into the décor — nod to the Queen of Hearts\' card soldiers'],
+  ]},
+  { id:'near1923', title:'Deck 3 — Near Restaurant 1923', color:'#b22222', eggs:[
+    ['Mickey & the Beanstalk Animated Mural','Mickey, Goofy, Donald, and Willy the Giant — pieces actually MOVE!'],
+    ['Tiny Disney Wish Sails Through the Mural','Wait and watch — the Wish ship sails by in the background'],
+    ['"Cindys" Artwork by Nikkolas Smith','Forward stairwell: Cinderellas from many backgrounds helping each other rise'],
+    ['Three Disney Castles in Forward Stairwell','Sleeping Beauty Castle (DL), Cinderella Castle (WDW), and Disneyland Paris'],
+  ]},
+  { id:'wishing', title:'Deck 4 — Wishing Star Café (Daytime)', color:'#1a5c38', eggs:[
+    ['Jiminy Cricket Statue at End of Bar','Tiny statue at the leftmost corner — named after his famous song'],
+    ['Mirror with Jiminy\'s Quote','"You deserve to have your wish come true" embossed on a mirror right behind Jiminy'],
+    ['Pinocchio Mosaic — Geppetto & Pinocchio','Tile mosaic on the wall beside the bar entrance'],
+    ['Pinocchio Mosaic — Figaro & Cleo','Second mosaic on the opposite wall — the cat and goldfish from Pinocchio'],
+  ]},
+  { id:'stairs', title:'Stairwells & Corridors', color:'#003087', eggs:[
+    ['"Disney Wish Joins the Fleet" Artwork','Forward stairs Decks 3–4: the ship\'s real journey from Germany to Port Canaveral'],
+    ['Transformation Moments Artwork (Forward)','Each piece depicts a pivotal Disney story transformation — name the film!'],
+    ['Fantastical Kingdom Artwork (Aft Stairs)','Aft stair halls celebrate magical Disney settings and kingdoms'],
+  ]},
+  { id:'arendelle', title:'Deck 11 — Arendelle: Frozen Dining', color:'#007b8a', eggs:[
+    ['Hidden Olaf in Table Legs','Tiny Olaf silhouettes carved into the table legs — easy to walk past'],
+    ['Hidden Olaf in Stage Railings','Same tiny Olaf carvings woven into the stage railing detail'],
+    ['Snowflake Fixtures — No Two Alike','Based on real crystallography — zero duplicate snowflakes in the entire room'],
+    ['Anna & Elsa\'s Parents in Wall Portraits','Paintings show the King and Queen of Arendelle with ship-style lanterns added'],
+    ['Hidden Mickey in Northern Lights Show','During the overhead projection, snowflakes momentarily form a Hidden Mickey'],
+    ['Troll Eyes in Rock Wall Decoration','One rock pattern has troll eyes that glimmer during the dinner show lighting'],
+  ]},
+  { id:'marceline', title:'Marceline Market — Walt\'s Hometown', color:'#c9a84c', eggs:[
+    ['Train Ceiling Beam Motifs','Beam artwork includes locomotives — Walt Disney\'s lifelong love of trains'],
+    ['Small-Town Stall Names','Names reference Marceline, Missouri and Walt\'s Americana inspirations'],
+    ['Mickey Black-and-White Era Art Panels','Panels themed after Mickey\'s first animated shorts — 1920s–30s style'],
+    ['Named After Walt\'s Actual Hometown','Marceline, Missouri is where Walt Disney grew up — whole venue honors that'],
+  ]},
+  { id:'throughout', title:'Bibbidi Bobbidi Boutique & Throughout', color:'#b22222', eggs:[
+    ['Cinderella Castle Mural in Boutique','Perfect photo spot — castle shimmers in the distance behind the makeover chair'],
+    ['Hidden Mickeys in Stateroom Carpets','Check YOUR cabin floor — Mickey silhouettes woven into the carpet pattern'],
+    ['Tangled Sun Icon (Multiple Locations)','Rapunzel\'s kingdom sun symbol appears in various spots around the ship'],
+    ['Shell & Owl Details in Corridors','Nods to other Disney princesses hidden throughout hallway decorations'],
+    ['Free Ship Tour (Ask Guest Services!)','Disney crew leads a tour covering dozens more secrets — check the Navigator app!'],
+  ]},
+];
+
+const NIGHT_SECS = [
+  { id:'nightingales', title:'Deck 3 — Nightingale\'s Piano Bar', color:'#3d1a5c', eggs:[
+    ['Bubble Chandelier = "Sing Sweet Nightingale" Scene','Soap bubble chandelier recreates Cinderella\'s cleaning scene — look up immediately'],
+    ['Sheet Music Etched INTO Every Bubble','Notes aren\'t random — actual sheet music for "Oh Sing Sweet Nightingale"'],
+    ['Rose Gold Accents Throughout','Color palette ties to Cinderella\'s enchantment theme — rose gold everywhere'],
+  ]},
+  { id:'bayou', title:'Deck 3 — The Bayou (Princess & the Frog)', color:'#1a5c38', eggs:[
+    ['Firefly Lights in the Magnolia Canopy Ceiling','Hundreds of tiny lights simulate fireflies through a magnolia blossom canopy'],
+    ['Tiana\'s Beignet Recipe on Menu','Menu references Tiana\'s secret beignet recipe — yes, you can order them!'],
+    ['Louis the Alligator References in Décor','Subtle nods to the jazz-playing alligator from Princess and the Frog'],
+    ['Live Jazz Stage Evokes New Orleans','Stage design is themed to evoke New Orleans — check every detail'],
+  ]},
+  { id:'hyperspace', title:'Deck 3 — Star Wars: Hyperspace Lounge', color:'#001f5b', eggs:[
+    ['Viewport Jumps to Hyperspace Every 7–10 Min','Entire back wall transitions to new Star Wars planets — wait for it!'],
+    ['Mustafar, Endor & Tatooine Visible','Multiple planets cycle through the viewport — spot and name each one'],
+    ['Millennium Falcon Flies Past Near Tatooine','Keep watching — Han Solo\'s ship makes a cameo near Tatooine'],
+    ['Resistance A-Wings & Mining Guild Freighters','Multiple Star Wars ship types fly past in the background'],
+    ['Holotube with Holographic Ship Models','Interactive holographic display — ask the bartender about it'],
+    ['Hyperspace Transition Synced to Ship\'s Motion','Jump moves in sync with the actual ship to prevent motion sickness'],
+    ['"Cookie" Tuggs\' Ship in the Viewport','Strono "Cookie" Tuggs\' ship from Galaxy\'s Edge hidden among passing vessels'],
+  ]},
+  { id:'luna', title:'Decks 4–5 — Luna Nightclub', color:'#6b2d8b', eggs:[
+    ['Fantasia-Inspired Celestial Ceiling Artwork','Décor draws from Fantasia\'s "Night on Bald Mountain" and starfield sequences'],
+    ['Hidden Disney References in Karaoke Song List','Easter eggs worked into the song selection and hosting materials'],
+  ]},
+  { id:'keg', title:'Deck 5 — Keg & Compass Pub', color:'#007b8a', eggs:[
+    ['The Nautilus Hidden Above the Bar','20,000 Leagues: Nautilus attacked by a giant squid with Ned trying to escape'],
+    ['Octopus #1: Holding a Mickey Ice Cream Bar','Four porthole octopuses each holding a Disney snack — find all four!'],
+    ['Octopus #2: Holding a Dole Whip','Classic pineapple treat in the tentacles'],
+    ['Octopus #3: Holding a Mickey Pretzel','The park\'s famous twisted pretzel'],
+    ['Octopus #4: Holding the Entire Disney Wish Ship','One greedy octopus grabbed the whole ship!'],
+    ['Ceiling Map: Characters at Real-World Locations','Ariel near the ocean, Moana in Polynesia — each placed near their geography'],
+    ['DCL Home Ports Marked on Ceiling Map','Burbank, Port Canaveral, and Disney locations on the maritime map overhead'],
+    ['Compass = Meyer Werft Shipyard Coordinates','Exact GPS coords of the German shipyard where the Wish was built'],
+    ['Wooden Plank = Port Canaveral Coordinates','Home port carved in wood — compare both for the ship\'s full journey'],
+    ['Marc Davis Viking Opera Painting','Haunted Mansion artist\'s painting of opera-singing Vikings on the wall'],
+    ['Two Imagineers Named on Map Drawers','Lead Imagineers signed their work on faux map drawers under the bar'],
+  ]},
+  { id:'hooks', title:'Deck 12 — Hook\'s Barbery + Secret Bar', color:'#b22222', eggs:[
+    ['Secret Bar Hidden Inside the Barbershop','Walk all the way past the barber chairs — most guests miss it entirely'],
+    ['Inlaid Map of Neverland in Dark Wood','Detailed Neverland map built into the wood décor — trace the geography'],
+    ['Hidden Pocket Watch (Nod to Tick-Tock the Croc)','The croc swallowed Hook\'s hand and a clock — find the watch reference'],
+    ['Tinker Bell Hidden Somewhere in the Space','Tink is lurking — keep looking until you spot her'],
+  ]},
+  { id:'rose', title:'Deck 12 — The Rose, Enchante & Palo', color:'#c9a84c', eggs:[
+    ['Enchanted Rose Centerpiece','Full-scale replica of the enchanted rose from Beauty and the Beast'],
+    ['Enchanted Mirror from Beauty and the Beast','The famous magic mirror is also replicated in the venue'],
+    ['Bar Top Shifts Gold (Day) to Crimson (Night)','Hand-polished marble changes hue with the ambient lighting'],
+    ['Cogsworth Gear Motifs on Chair Backs','Clockwork gears reference Cogsworth — check every chair back'],
+    ['Hidden Mickey in Clock Gears at Dusk','Gear pattern forms a Hidden Mickey — only visible when backlit at dusk'],
+    ['Clock Painting Hands Set to 19:22','Wall painting timepiece hints at Disney\'s centennial inspiration for the Wish'],
+    ['Lumiere Referenced Throughout Enchante','Restaurant themed after the candelabra maitre d\' — find Lumiere\'s nods'],
+  ]},
+  { id:'quietcove', title:'Deck 13 — Quiet Cove & Cove Café', color:'#003087', eggs:[
+    ['Moana Touches Throughout Cove Café','Subtle Moana-themed details scattered through the café décor — find them all'],
+    ['Infinity Pool Aligned with the Horizon','The pool\'s infinity edge designed to blend seamlessly with the ocean horizon'],
+    ['Giant Hidden Mickey from Spa Awnings','Best seen from Observation Deck above — awnings form a huge Mickey shape'],
+  ]},
+];
+
+const ISLAND_SECS = [
+  { id:'cc_land', title:'On Land — Bars, BBQ & Observation Tower', color:'#2d6a4f', eggs:[
+    ['Hidden Mickey at Heads Up Bar','3 coins under the laminated counter form a classic Mickey — near the red support pole, directly under the "D" in "HEADS"'],
+    ['Hidden Mickey at Cookie\'s Too BBQ','Wall shelf Mickey made from plates/pans — above 5 horizontal plates, over the 2nd from right, partially behind the ceiling fan'],
+    ['Hidden Mickey at Observation Tower','Climb to 2nd or 3rd deck — black classic Mickey on the RED motor housing of the pelican\'s bathtub fan'],
+    ['Mount Rustmore — Mickey, Pluto, Donald & Goofy','Four giant painted metal buoys: Mickey (mouse ears), Pluto, Donald, and Goofy (hat tower) — prime photo spot!'],
+    ['Pelican Plunge — Flotsam & Jetsam Nautical Décor','The floating water slide platform is decorated with Flotsam and Jetsam from The Little Mermaid'],
+    ['Olaf\'s Summertime Freeze Theming','Frozen drink stand near Pelican Point has Olaf and Sven themed décor and souvenir cup designs'],
+    ['Real Bahamian Post Office with Exclusive Stamps','A working post office with a special Castaway Cay postage stamp — mail a postcard home from Disney\'s island!'],
+    ['Spring-A-Leak Water Play Area Character Theming','Open-air water play zone near Scuttle\'s Cove has Disney character theming throughout'],
+  ]},
+];
+
+const ALL_SECS = [...FAMILY_SECS, ...NIGHT_SECS, ...ISLAND_SECS];
+
+// ─────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────
+let PLAYERS = [];
+let S = {}, B = [];
+let setupCount = 4;
+let setupColors = PALETTE.slice();
+
+// ─────────────────────────────────────────
+//  STORAGE
+// ─────────────────────────────────────────
+function loadAll() {
+  try { S = JSON.parse(localStorage.getItem(STATE_KEY)) || {}; } catch { S = {}; }
+  try { B = JSON.parse(localStorage.getItem(BONUS_KEY)) || []; } catch { B = []; }
+}
+function saveS() { localStorage.setItem(STATE_KEY, JSON.stringify(S)); }
+function saveB() { localStorage.setItem(BONUS_KEY, JSON.stringify(B)); }
+function loadSetup() { try { return JSON.parse(localStorage.getItem(SETUP_KEY)); } catch { return null; } }
+function persistSetup(data) { localStorage.setItem(SETUP_KEY, JSON.stringify(data)); }
+
+// ─────────────────────────────────────────
+//  SETUP SCREEN
+// ─────────────────────────────────────────
+function initSetupScreen() {
+  const grid = document.getElementById('countGrid');
+  for (let i = 1; i <= 8; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'count-btn' + (i === setupCount ? ' sel' : '');
+    btn.textContent = i;
+    btn.onclick = () => selectCount(i);
+    grid.appendChild(btn);
+  }
+  renderSetupRows();
+}
+
+function selectCount(n) {
+  setupCount = n;
+  document.querySelectorAll('.count-btn').forEach((b, i) => b.classList.toggle('sel', i + 1 === n));
+  renderSetupRows();
+}
+
+function renderSetupRows() {
+  const container = document.getElementById('setupPlayerRows');
+  const prev = [];
+  container.querySelectorAll('.setup-player-row').forEach((row, i) => {
+    prev[i] = { name: row.querySelector('.setup-name-input').value, emoji: row.querySelector('.emoji-input').value };
+  });
+  container.innerHTML = '';
+  for (let i = 0; i < setupCount; i++) {
+    const color = setupColors[i] || PALETTE[i % PALETTE.length];
+    const name = (prev[i] && prev[i].name) || '';
+    const emoji = (prev[i] && prev[i].emoji) || DEF_EMOJIS[i % DEF_EMOJIS.length];
+    const row = document.createElement('div');
+    row.className = 'setup-player-row';
+    row.dataset.idx = i;
+    row.innerHTML = `
+      <div class="setup-color-dot" id="sdot-${i}" style="background:${color}"></div>
+      <input class="setup-name-input" id="sname-${i}" placeholder="Player ${i + 1}" maxlength="14" value="${name}">
+      <input class="emoji-input" id="semoji-${i}" type="text" maxlength="4" inputmode="text" autocomplete="off" value="${emoji}">
+      <div class="color-swatches" id="sswatches-${i}"></div>
+    `;
+    container.appendChild(row);
+    const sw = row.querySelector('.color-swatches');
+    PALETTE.forEach((c, ci) => {
+      const dot = document.createElement('div');
+      dot.className = 'swatch' + (c === color ? ' sel' : '');
+      dot.style.background = c;
+      dot.onclick = () => pickSetupColor(i, c);
+      sw.appendChild(dot);
+    });
+  }
+}
+
+function pickSetupColor(idx, color) {
+  setupColors[idx] = color;
+  document.getElementById('sdot-' + idx).style.background = color;
+  document.querySelectorAll(`#sswatches-${idx} .swatch`).forEach((s, ci) => s.classList.toggle('sel', PALETTE[ci] === color));
+}
+
+function commitSetup() {
+  const groupName = document.getElementById('setupGroupName').value.trim();
+  if (!groupName) { alert('Please enter your group name!'); return; }
+  const players = [];
+  for (let i = 0; i < setupCount; i++) {
+    const rawName = document.getElementById('sname-' + i).value.trim() || ('Player ' + (i + 1));
+    const rawEmoji = [...(document.getElementById('semoji-' + i).value.trim() || DEF_EMOJIS[i % DEF_EMOJIS.length])][0] || DEF_EMOJIS[i % DEF_EMOJIS.length];
+    players.push({ id: 'p' + i, name: rawName, emoji: rawEmoji, color: setupColors[i] || PALETTE[i % PALETTE.length] });
+  }
+  persistSetup({ groupName, players });
+  PLAYERS = players;
+  document.getElementById('headerSub').textContent = groupName + ' · ' + SHIP_DATE;
+  document.getElementById('setupOverlay').classList.remove('open');
+  initGame();
+}
+
+// ─────────────────────────────────────────
+//  GAME INIT
+// ─────────────────────────────────────────
+function initGame() {
+  loadAll();
+  buildSections(FAMILY_SECS, 'panel-family');
+  buildSections(NIGHT_SECS, 'panel-night');
+  buildSections(ISLAND_SECS, 'panel-island');
+  renderBonusCards();
+  updateStrip();
+  document.getElementById('fab').classList.remove('hidden');
+}
+
+// ─────────────────────────────────────────
+//  HELPERS
+// ─────────────────────────────────────────
+function hexRgba(hex, a) {
+  const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+function lighten(hex) {
+  return `rgb(${Math.min(255,parseInt(hex.slice(1,3),16)+80)},${Math.min(255,parseInt(hex.slice(3,5),16)+80)},${Math.min(255,parseInt(hex.slice(5,7),16)+80)})`;
+}
+function ck(sid, ei, pid) { return !!S[sid + '__' + ei + '__' + pid]; }
+function toggle(sid, ei, pid) { S[sid + '__' + ei + '__' + pid] = !S[sid + '__' + ei + '__' + pid]; saveS(); }
+
+// ─────────────────────────────────────────
+//  RENDER SECTIONS
+// ─────────────────────────────────────────
+function setButtonState(btn, player, isOn) {
+  if (isOn) {
+    btn.textContent = player.emoji;
+    btn.classList.add('on');
+    btn.style.background = hexRgba(player.color, 0.22);
+    btn.style.borderColor = player.color;
+    btn.style.color = '#fff';
+    btn.style.fontSize = PLAYERS.length > 5 ? '13px' : '14px';
+  } else {
+    btn.textContent = player.name.slice(0, PLAYERS.length > 5 ? 3 : 4);
+    btn.classList.remove('on');
+    btn.style.background = '';
+    btn.style.borderColor = '';
+    btn.style.color = '';
+    btn.style.fontSize = '';
+  }
+}
+
+function buildSections(secs, panelId) {
+  const panel = document.getElementById(panelId);
+  secs.forEach(sec => {
+    const wrap = document.createElement('div');
+    const hdr = document.createElement('div');
+    hdr.className = 'sec-hdr';
+    hdr.style.cssText = `background:${hexRgba(sec.color, 0.18)};border-left:3px solid ${sec.color}`;
+    const left = document.createElement('div'); left.style.flex = '1';
+    const h2 = document.createElement('h2'); h2.style.color = lighten(sec.color); h2.textContent = sec.title;
+    const prog = document.createElement('div'); prog.className = 'prog-wrap';
+    const fill = document.createElement('div'); fill.className = 'prog-fill'; fill.id = 'p_' + sec.id; fill.style.background = sec.color;
+    prog.appendChild(fill); left.appendChild(h2); left.appendChild(prog);
+    const badge = document.createElement('div'); badge.className = 'sec-pts'; badge.style.color = lighten(sec.color); badge.textContent = sec.eggs.length + ' pts';
+    hdr.appendChild(left); hdr.appendChild(badge); wrap.appendChild(hdr);
+    sec.eggs.forEach((egg, ei) => {
+      const card = document.createElement('div'); card.className = 'egg-card'; card.id = 'c_' + sec.id + '_' + ei;
+      const info = document.createElement('div'); info.className = 'egg-info';
+      info.innerHTML = `<div class="egg-name">${egg[0]}</div><div class="egg-hint">${egg[1]}</div>`;
+      const btns = document.createElement('div'); btns.className = 'egg-btns';
+      PLAYERS.forEach(p => {
+        const b = document.createElement('button');
+        b.className = 'p-btn'; b.id = 'b_' + sec.id + '_' + ei + '_' + p.id;
+        setButtonState(b, p, ck(sec.id, ei, p.id));
+        b.addEventListener('click', () => {
+          toggle(sec.id, ei, p.id);
+          setButtonState(b, p, ck(sec.id, ei, p.id));
+          card.classList.toggle('all-found', PLAYERS.every(pl => ck(sec.id, ei, pl.id)));
+          updateProg(sec); updateStrip();
+        });
+        btns.appendChild(b);
+      });
+      card.appendChild(info); card.appendChild(btns); wrap.appendChild(card);
+      card.classList.toggle('all-found', PLAYERS.every(p => ck(sec.id, ei, p.id)));
+    });
+    panel.appendChild(wrap);
+    updateProg(sec);
+  });
+}
+
+function updateProg(sec) {
+  const fill = document.getElementById('p_' + sec.id); if (!fill) return;
+  const found = sec.eggs.filter((_, ei) => PLAYERS.some(p => ck(sec.id, ei, p.id))).length;
+  fill.style.width = (found / sec.eggs.length * 100) + '%';
+}
+
+function playerTotal(pid) {
+  let n = 0;
+  ALL_SECS.forEach(sec => sec.eggs.forEach((_, ei) => { if (ck(sec.id, ei, pid)) n++; }));
+  n += B.filter(f => f.pid === pid).length * 2;
+  return n;
+}
+
+function updateStrip() {
+  const strip = document.getElementById('scoreStrip'); strip.innerHTML = '';
+  PLAYERS.forEach(p => {
+    const chip = document.createElement('div'); chip.className = 'score-chip';
+    chip.style.borderColor = p.color; chip.style.color = p.color;
+    chip.innerHTML = p.emoji + ' ' + p.name.slice(0, 6) + ': ' + playerTotal(p.id) + '<span class="edit-hint">✏️</span>';
+    chip.onclick = openPlayerSettings;
+    strip.appendChild(chip);
+  });
+}
+
+// ─────────────────────────────────────────
+//  BONUS FINDS
+// ─────────────────────────────────────────
+let mPlayer = null;
+
+function openBonusModal() {
+  document.getElementById('mLoc').innerHTML = SHIP_LOCS.map(l => `<option>${l}</option>`).join('');
+  document.getElementById('mDesc').value = ''; mPlayer = null;
+  const mp = document.getElementById('mPlayers'); mp.innerHTML = '';
+  PLAYERS.forEach(p => {
+    const b = document.createElement('button'); b.className = 'mp-btn';
+    b.innerHTML = p.emoji + '<br>' + p.name.slice(0, 6);
+    b.onclick = () => {
+      mp.querySelectorAll('.mp-btn').forEach(x => { x.classList.remove('on'); x.style.background = ''; x.style.borderColor = 'rgba(255,255,255,0.12)'; });
+      b.classList.add('on'); b.style.background = hexRgba(p.color, 0.28); b.style.borderColor = p.color;
+      mPlayer = p.id;
+    };
+    mp.appendChild(b);
+  });
+  document.getElementById('bonusOverlay').classList.add('open');
+}
+function closeBonusModal() { document.getElementById('bonusOverlay').classList.remove('open'); }
+
+function saveBonus() {
+  const desc = document.getElementById('mDesc').value.trim();
+  const loc = document.getElementById('mLoc').value;
+  if (!desc) { alert('Please describe what you found!'); return; }
+  if (!mPlayer) { alert('Please select who found it!'); return; }
+  B.push({ id: Date.now(), desc, loc, pid: mPlayer, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
+  saveB(); closeBonusModal(); renderBonusCards(); updateStrip();
+}
+
+function renderBonusCards() {
+  ['panel-family', 'panel-night', 'panel-island'].forEach(panelId => {
+    let sec = document.getElementById('bonus_' + panelId);
+    if (!sec) { sec = document.createElement('div'); sec.id = 'bonus_' + panelId; document.getElementById(panelId).appendChild(sec); }
+    sec.innerHTML = ''; if (!B.length) return;
+    const hdr = document.createElement('div'); hdr.className = 'sec-hdr';
+    hdr.style.cssText = 'background:rgba(201,168,76,0.12);border-left:3px solid var(--gold)';
+    hdr.innerHTML = `<div style="flex:1"><h2 style="color:var(--gold-lt)">⭐ Bonus Finds</h2></div><div class="sec-pts" style="color:var(--gold)">${B.length * 2} pts</div>`;
+    sec.appendChild(hdr);
+    B.forEach(f => {
+      const p = PLAYERS.find(x => x.id === f.pid);
+      const card = document.createElement('div'); card.className = 'bonus-card';
+      card.innerHTML = `<div class="bonus-info"><div class="bonus-name">${f.desc}</div><div class="bonus-meta">${f.loc} · ${p ? p.emoji + ' ' + p.name : f.pid} · ${f.time}</div></div><div class="bonus-pts">+2 pts</div>`;
+      sec.appendChild(card);
+    });
+  });
+}
+
+// ─────────────────────────────────────────
+//  PLAYER SETTINGS
+// ─────────────────────────────────────────
+function openPlayerSettings() {
+  const rows = document.getElementById('playerEditRows'); rows.innerHTML = '';
+  PLAYERS.forEach((p, i) => {
+    const row = document.createElement('div'); row.className = 'player-edit-row';
+    row.innerHTML = `
+      <div class="player-color-dot" style="background:${p.color}"></div>
+      <div class="player-edit-label" style="color:${p.color}">${p.name}</div>
+      <input class="emoji-input" type="text" maxlength="4" inputmode="text" autocomplete="off" value="${p.emoji}" id="ei_${i}">
+    `;
+    rows.appendChild(row);
+  });
+  document.getElementById('playerOverlay').classList.add('open');
+}
+
+function savePlayerSettings() {
+  PLAYERS.forEach((p, i) => {
+    const val = [...document.getElementById('ei_' + i).value.trim()];
+    if (val.length > 0) p.emoji = val[0];
+  });
+  const saved = loadSetup(); if (saved) { saved.players = PLAYERS; persistSetup(saved); }
+  document.getElementById('playerOverlay').classList.remove('open');
+  ALL_SECS.forEach(sec => sec.eggs.forEach((_, ei) => PLAYERS.forEach(p => {
+    const btn = document.getElementById('b_' + sec.id + '_' + ei + '_' + p.id);
+    if (btn && btn.classList.contains('on')) btn.textContent = p.emoji;
+  })));
+  updateStrip();
+}
+
+['bonusOverlay', 'playerOverlay'].forEach(id => {
+  document.getElementById(id).addEventListener('click', e => { if (e.target === document.getElementById(id)) document.getElementById(id).classList.remove('open'); });
+});
+
+// ─────────────────────────────────────────
+//  SCORECARD
+// ─────────────────────────────────────────
+function buildScorecard() {
+  const el = document.getElementById('scorecardEl'); el.innerHTML = '';
+  const abbr = n => n.slice(0, PLAYERS.length <= 4 ? 5 : 3);
+
+  const hr = document.createElement('div'); hr.className = 'sc-hdr-row';
+  hr.innerHTML = '<div class="sc-zone" style="font-weight:700">Location</div>';
+  const hs = document.createElement('div'); hs.className = 'sc-scores';
+  PLAYERS.forEach(p => { const v = document.createElement('div'); v.className = 'sc-val'; v.style.color = p.color; v.textContent = abbr(p.name); hs.appendChild(v); });
+  hr.appendChild(hs); el.appendChild(hr);
+
+  function renderGroup(secs, label, color) {
+    const t = document.createElement('div'); t.className = 'sc-section-title'; t.style.color = lighten(color); t.textContent = label; el.appendChild(t);
+    const sub = new Array(PLAYERS.length).fill(0);
+    secs.forEach(sec => {
+      const r = document.createElement('div'); r.className = 'sc-row';
+      const z = document.createElement('div'); z.className = 'sc-zone'; z.textContent = sec.title.replace(/\(.*?\)/g, '').trim().slice(0, 44); r.appendChild(z);
+      const s = document.createElement('div'); s.className = 'sc-scores';
+      PLAYERS.forEach((p, i) => { const n = sec.eggs.filter((_, ei) => ck(sec.id, ei, p.id)).length; sub[i] += n; const v = document.createElement('div'); v.className = 'sc-val'; v.style.color = p.color; v.textContent = n || '—'; s.appendChild(v); });
+      r.appendChild(s); el.appendChild(r);
+    });
+    const sr = document.createElement('div'); sr.className = 'sc-row sub';
+    const sz = document.createElement('div'); sz.className = 'sc-zone'; sz.style.color = lighten(color); sz.textContent = 'Subtotal'; sr.appendChild(sz);
+    const ss = document.createElement('div'); ss.className = 'sc-scores';
+    PLAYERS.forEach((p, i) => { const v = document.createElement('div'); v.className = 'sc-val'; v.style.color = p.color; v.textContent = sub[i]; ss.appendChild(v); });
+    sr.appendChild(ss); el.appendChild(sr); return sub;
+  }
+
+  const fSub = renderGroup(FAMILY_SECS, '🏰 Family Hunt (All Ages)', '#1a5c38');
+  const nSub = renderGroup(NIGHT_SECS, '🌙 Nightclubs', '#6b2d8b');
+  const iSub = renderGroup(ISLAND_SECS, '🏝️ Castaway Cay Island', '#0077b6');
+
+  const bt = document.createElement('div'); bt.className = 'sc-section-title'; bt.style.color = 'var(--gold)'; bt.textContent = '⭐ Bonus Finds (2 pts each)'; el.appendChild(bt);
+  const bTotals = new Array(PLAYERS.length).fill(0);
+  if (!B.length) {
+    const nr = document.createElement('div'); nr.className = 'sc-row'; nr.innerHTML = '<div class="sc-zone" style="font-style:italic">None yet — tap + to log one!</div>'; el.appendChild(nr);
+  } else {
+    B.forEach(f => {
+      const p = PLAYERS.find(x => x.id === f.pid);
+      const r = document.createElement('div'); r.className = 'sc-row';
+      const z = document.createElement('div'); z.className = 'sc-zone'; z.textContent = (p ? p.emoji + ' ' : '') + f.desc.slice(0, 36); r.appendChild(z);
+      const s = document.createElement('div'); s.className = 'sc-scores';
+      PLAYERS.forEach((pl, i) => { if (f.pid === pl.id) bTotals[i] += 2; const v = document.createElement('div'); v.className = 'sc-val'; v.style.color = pl.color; v.textContent = f.pid === pl.id ? '+2' : '—'; s.appendChild(v); });
+      r.appendChild(s); el.appendChild(r);
+    });
+  }
+
+  const grand = PLAYERS.map((_, i) => fSub[i] + nSub[i] + iSub[i] + bTotals[i]);
+  const tr = document.createElement('div'); tr.className = 'sc-row total';
+  const tz = document.createElement('div'); tz.className = 'sc-zone'; tz.style.color = 'var(--gold)'; tz.textContent = '⭐ GRAND TOTAL'; tr.appendChild(tz);
+  const ts = document.createElement('div'); ts.className = 'sc-scores';
+  PLAYERS.forEach((p, i) => { const v = document.createElement('div'); v.className = 'sc-val'; v.style.color = p.color; v.textContent = grand[i]; v.style.fontSize = '15px'; ts.appendChild(v); });
+  tr.appendChild(ts); el.appendChild(tr);
+
+  const maxScore = Math.max(...grand);
+  if (maxScore > 0) {
+    const wi = grand.indexOf(maxScore); const wp = PLAYERS[wi];
+    const wb = document.createElement('div'); wb.className = 'winner-box';
+    wb.innerHTML = `<div class="crown">${wp.emoji}</div><div class="wname">Current Leader: ${wp.name}!</div><div class="wsub">${maxScore} eggs found · Keep hunting! 🎉</div>`;
+    el.appendChild(wb);
+  }
+
+  const dr = document.createElement('div'); dr.className = 'data-row';
+  const eb = document.createElement('button'); eb.className = 'd-btn export'; eb.textContent = '⬇ Export Progress'; eb.onclick = exportData;
+  const ib = document.createElement('button'); ib.className = 'd-btn import'; ib.textContent = '⬆ Import / Restore'; ib.onclick = importData;
+  dr.appendChild(eb); dr.appendChild(ib); el.appendChild(dr);
+  const dn = document.createElement('div'); dn.className = 'd-note'; dn.textContent = 'Export saves all progress + bonus finds as a .json file. Import restores from a previous export — useful when switching phones.'; el.appendChild(dn);
+
+  const rb = document.createElement('button'); rb.className = 'reset-btn'; rb.textContent = '↺  Reset All Progress (cannot be undone)';
+  rb.onclick = () => { if (confirm('Reset all progress? This cannot be undone.')) { localStorage.removeItem(STATE_KEY); localStorage.removeItem(BONUS_KEY); location.reload(); } };
+  el.appendChild(rb);
+}
+
+// ─────────────────────────────────────────
+//  PASS ALONG / SHARE TAB
+// ─────────────────────────────────────────
+function buildPassAlong() {
+  const el = document.getElementById('passalongEl'); el.innerHTML = '';
+  const url = window.location.href.replace(/#.*$/, '').replace(/\?.*$/, '');
+  const qrSrc = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=0&data=' + encodeURIComponent(url);
+
+  const grand = PLAYERS.map(p => playerTotal(p.id));
+  const ranked = PLAYERS.map((p, i) => ({ p, score: grand[i] })).sort((a, b) => b.score - a.score);
+
+  const scoreRows = ranked.map(({ p, score }, rank) => {
+    const medal = rank === 0 && score > 0 ? ' 🥇' : '';
+    return `<div class="pa-score-row">
+      <div class="pa-score-name"><span>${p.emoji}</span><span style="color:${p.color}">${p.name}</span></div>
+      <div class="pa-score-pts" style="color:${p.color}">${score}${medal}</div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="pa-title">📲 Share the Hunt!</div>
+    <div class="pa-sub">Scan to start your own fresh game<br>on your group's own device</div>
+    <div class="qr-wrap">
+      <img src="${qrSrc}" alt="QR Code"
+        onerror="this.parentElement.innerHTML='<div style=&quot;padding:16px;font-size:11px;color:#555;word-break:break-all;width:220px&quot;>${url}</div>'">
+    </div>
+    <div class="pa-url">${url}</div>
+    <div class="pa-tip">📱 <strong>On iPhone:</strong> tap Share → "Add to Home Screen" for the best experience<br>📱 <strong>On Android:</strong> tap ⋮ → "Add to Home Screen"<br>🔒 Each group gets their own fresh scores — nothing is shared between devices</div>
+    <div class="pa-scores">
+      <div class="pa-scores-title">🏆 Current Standings</div>
+      ${scoreRows}
+    </div>
+    <div class="pa-credit">${CREDIT_LINE}</div>
+  `;
+}
+
+// ─────────────────────────────────────────
+//  EXPORT / IMPORT
+// ─────────────────────────────────────────
+function exportData() {
+  const saved = loadSetup();
+  const slug = saved ? saved.groupName.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '') : 'Group';
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), trip: SHIP_DATE, progress: S, bonusFinds: B }, null, 2)], { type: 'application/json' }));
+  a.download = 'WishHunt_' + slug + '_' + new Date().toISOString().slice(0, 10) + '.json';
+  a.click();
+}
+
+function importData() {
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json';
+  inp.onchange = e => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const d = JSON.parse(ev.target.result);
+        if (!d.progress) { alert('Invalid file.'); return; }
+        if (!confirm('This will overwrite all current progress. Continue?')) return;
+        localStorage.setItem(STATE_KEY, JSON.stringify(d.progress));
+        localStorage.setItem(BONUS_KEY, JSON.stringify(d.bonusFinds || []));
+        location.reload();
+      } catch { alert('Could not read file.'); }
+    };
+    reader.readAsText(e.target.files[0]);
+  };
+  inp.click();
+}
+
+// ─────────────────────────────────────────
+//  TAB SWITCHING
+// ─────────────────────────────────────────
+function switchTab(name, tabEl) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  tabEl.classList.add('active');
+  const hideFab = name === 'scores' || name === 'share';
+  document.getElementById('fab').classList.toggle('hidden', hideFab);
+  if (name === 'scores') buildScorecard();
+  if (name === 'share') buildPassAlong();
+}
+
+// ─────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────
+(function init() {
+  const saved = loadSetup();
+  if (saved && saved.players && saved.players.length > 0) {
+    PLAYERS = saved.players;
+    document.getElementById('headerSub').textContent = saved.groupName + ' · ' + SHIP_DATE;
+    document.getElementById('setupOverlay').classList.remove('open');
+    initGame();
+  } else {
+    initSetupScreen();
+  }
+})();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
