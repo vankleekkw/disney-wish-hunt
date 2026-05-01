@@ -128,6 +128,9 @@ body.light .hint-island{background:rgba(0,100,40,0.08);border-color:rgba(0,140,6
 .picker-emoji:focus{border-color:var(--gold);}
 .picker-dot{width:20px;height:20px;border-radius:50%;flex-shrink:0;}
 .picker-lbl{font-size:11px;font-weight:700;color:var(--muted);}
+.color-picker-row{display:flex;justify-content:space-evenly;padding:6px 0;}
+.cp-swatch{width:30px;height:30px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border-color .12s;}
+.cp-swatch.sel{border-color:var(--sel-ring);box-shadow:0 0 0 2px rgba(128,128,128,0.4);}
 .setup-start-btn{display:block;width:100%;padding:14px;border-radius:11px;border:none;background:linear-gradient(135deg,var(--gold),#906010);color:#000;font-family:'Lato',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:22px;}
 
 /* PLAYER EDIT SHEET */
@@ -504,9 +507,9 @@ function renderSetupRows() {
       <input class="setup-name-input" id="sname-${i}" placeholder="Player ${i + 1}" maxlength="14" value="${name}">
       <div class="setup-pickers">
         <input class="picker-emoji" id="semoji-${i}" type="text" maxlength="4" value="${emoji}" placeholder="⭐" oninput="setupEmojis[${i}]=this.value||'${emoji}'">
-        <button class="picker-btn" type="button" onclick="cycleColor(${i})">
+        <button class="picker-btn" type="button" onclick="toggleColorPicker(${i})">
           <span class="picker-dot" id="sdot-${i}" style="background:${color}"></span>
-          <span class="picker-lbl">Color ›</span>
+          <span class="picker-lbl">Color</span>
         </button>
       </div>
     `;
@@ -514,10 +517,25 @@ function renderSetupRows() {
   }
 }
 
-function cycleColor(idx) {
-  const ci = PALETTE.indexOf(setupColors[idx]);
-  setupColors[idx] = PALETTE[(ci + 1) % PALETTE.length];
-  document.getElementById('sdot-' + idx).style.background = setupColors[idx];
+function toggleColorPicker(idx) {
+  const wasOpen = !!document.getElementById('scp-' + idx);
+  document.querySelectorAll('.color-picker-row').forEach(el => el.remove());
+  if (wasOpen) return;
+  const row = document.createElement('div');
+  row.id = 'scp-' + idx;
+  row.className = 'color-picker-row';
+  PALETTE.forEach(c => {
+    const s = document.createElement('div');
+    s.className = 'cp-swatch' + (c === setupColors[idx] ? ' sel' : '');
+    s.style.background = c;
+    s.onclick = () => {
+      setupColors[idx] = c;
+      document.getElementById('sdot-' + idx).style.background = c;
+      row.remove();
+    };
+    row.appendChild(s);
+  });
+  document.getElementById('sdot-' + idx).closest('.setup-player-row').appendChild(row);
 }
 
 function commitSetup() {
@@ -581,14 +599,12 @@ function setButtonState(btn, player, isOn) {
     btn.style.background = hexRgba(tc, isLight ? 0.85 : 0.22);
     btn.style.borderColor = tc;
     btn.style.color = '#fff';
-    btn.style.fontSize = PLAYERS.length > 5 ? '13px' : '14px';
   } else {
-    btn.textContent = player.name.slice(0, PLAYERS.length > 5 ? 3 : 4);
+    btn.textContent = player.emoji;
     btn.classList.remove('on');
     btn.style.background = '';
     btn.style.borderColor = '';
     btn.style.color = '';
-    btn.style.fontSize = '';
   }
 }
 
@@ -831,7 +847,22 @@ function buildPassAlong() {
   const grand = PLAYERS.map(p => playerTotal(p.id));
   const ranked = PLAYERS.map((p, i) => ({ p, score: grand[i] })).sort((a, b) => b.score - a.score);
 
+  const nightTotals = PLAYERS.map(p => {
+    let n = 0;
+    NIGHT_SECS.forEach(sec => sec.eggs.forEach((_, ei) => { if (ck(sec.id, ei, p.id)) n++; }));
+    return n;
+  });
+  const nightRanked = PLAYERS.map((p, i) => ({ p, score: nightTotals[i] })).sort((a, b) => b.score - a.score);
+
   const scoreRows = ranked.map(({ p, score }, rank) => {
+    const medal = rank === 0 && score > 0 ? ' 🥇' : '';
+    return `<div class="pa-score-row">
+      <div class="pa-score-name"><span>${p.emoji}</span><span style="color:${themeColor(p.color)}">${p.name}</span></div>
+      <div class="pa-score-pts" style="color:${themeColor(p.color)}">${score}${medal}</div>
+    </div>`;
+  }).join('');
+
+  const nightRows = nightRanked.map(({ p, score }, rank) => {
     const medal = rank === 0 && score > 0 ? ' 🥇' : '';
     return `<div class="pa-score-row">
       <div class="pa-score-name"><span>${p.emoji}</span><span style="color:${themeColor(p.color)}">${p.name}</span></div>
@@ -851,6 +882,10 @@ function buildPassAlong() {
     <div class="pa-scores">
       <div class="pa-scores-title">🏆 Current Standings</div>
       ${scoreRows}
+    </div>
+    <div class="pa-scores">
+      <div class="pa-scores-title">🌙 Parent Bonus — Nightclubs</div>
+      ${nightRows}
     </div>
     <div class="pa-credit">${CREDIT_LINE}</div>
   `;
