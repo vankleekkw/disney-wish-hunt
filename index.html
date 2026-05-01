@@ -19,13 +19,13 @@
   --winner-bg:linear-gradient(135deg,#1a1000,#2a1f00); --sel-ring:#fff;
 }
 body.light {
-  --bg:#f4efe4; --card:#fffdf7; --border:rgba(150,110,10,0.22);
-  --gold:#8a5c00; --gold-lt:#5a3800; --text:#1a1400; --muted:#6a5e40;
-  --header-bg:rgba(244,239,228,0.97); --sheet-bg:#fffdf7;
-  --setup-bg:#ede8da; --setup-ol:rgba(244,239,228,0.99);
-  --surface:rgba(0,0,0,0.05); --surface-bd:rgba(0,0,0,0.14);
-  --btn-off:rgba(0,0,0,0.45); --divider:rgba(0,0,0,0.08);
-  --winner-bg:linear-gradient(135deg,#fdf0d0,#f7e090); --sel-ring:#1a1400;
+  --bg:#cfc8b2; --card:#dad3bc; --border:rgba(110,85,10,0.28);
+  --gold:#7a4e00; --gold-lt:#4a2e00; --text:#1a1200; --muted:#58503a;
+  --header-bg:rgba(195,188,170,0.97); --sheet-bg:#dad3bc;
+  --setup-bg:#c6bfa8; --setup-ol:rgba(195,188,170,0.99);
+  --surface:rgba(0,0,0,0.07); --surface-bd:rgba(0,0,0,0.18);
+  --btn-off:rgba(0,0,0,0.5); --divider:rgba(0,0,0,0.12);
+  --winner-bg:linear-gradient(135deg,#e8d898,#d4c060); --sel-ring:#1a1200;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
@@ -274,8 +274,9 @@ body.light .pa-tip{background:rgba(0,60,200,0.06);border-color:rgba(0,80,200,0.1
 const SHIP_DATE  = 'Jun 1–5, 2026';
 const CREDIT_LINE = 'Courtesy of the VanKleek Family · Stateroom 8570 · Elmhurst, IL';
 
-const PALETTE    = ['#4da6ff','#00c8d7','#e63946','#ff69b4','#2dc653','#ff8c00','#9b59b6','#f0b429'];
-const DEF_EMOJIS = ['⭐','🌟','✨','💫','🎯','🏆','🎪','🎨'];
+const PALETTE      = ['#4da6ff','#00c8d7','#e63946','#ff69b4','#2dc653','#ff8c00','#9b59b6','#f0b429'];
+const PALETTE_DARK = ['#1a5fa0','#006878','#a01020','#a01860','#1a7a30','#9a5000','#601a80','#806000'];
+const DEF_EMOJIS   = ['⭐','🌟','✨','💫','🎯','🏆','🎪','🎨'];
 
 const SETUP_KEY  = 'wish_setup_v1';
 const STATE_KEY  = 'wish_state_v1';
@@ -558,6 +559,13 @@ function hexRgba(hex, a) {
 function lighten(hex) {
   return `rgb(${Math.min(255,parseInt(hex.slice(1,3),16)+80)},${Math.min(255,parseInt(hex.slice(3,5),16)+80)},${Math.min(255,parseInt(hex.slice(5,7),16)+80)})`;
 }
+const _pmap = new Map(PALETTE.map((c, i) => [c, PALETTE_DARK[i]]));
+function themeColor(hex) {
+  return document.body.classList.contains('light') ? (_pmap.get(hex) || hex) : hex;
+}
+function sectionColor(hex) {
+  return document.body.classList.contains('light') ? hex : lighten(hex);
+}
 function ck(sid, ei, pid) { return !!S[sid + '__' + ei + '__' + pid]; }
 function toggle(sid, ei, pid) { S[sid + '__' + ei + '__' + pid] = !S[sid + '__' + ei + '__' + pid]; saveS(); }
 
@@ -568,8 +576,10 @@ function setButtonState(btn, player, isOn) {
   if (isOn) {
     btn.textContent = player.emoji;
     btn.classList.add('on');
-    btn.style.background = hexRgba(player.color, 0.22);
-    btn.style.borderColor = player.color;
+    const tc = themeColor(player.color);
+    const isLight = document.body.classList.contains('light');
+    btn.style.background = hexRgba(tc, isLight ? 0.85 : 0.22);
+    btn.style.borderColor = tc;
     btn.style.color = '#fff';
     btn.style.fontSize = PLAYERS.length > 5 ? '13px' : '14px';
   } else {
@@ -590,11 +600,11 @@ function buildSections(secs, panelId) {
     hdr.className = 'sec-hdr';
     hdr.style.cssText = `background:${hexRgba(sec.color, 0.18)};border-left:3px solid ${sec.color}`;
     const left = document.createElement('div'); left.style.flex = '1';
-    const h2 = document.createElement('h2'); h2.style.color = lighten(sec.color); h2.textContent = sec.title;
+    const h2 = document.createElement('h2'); h2.style.color = sectionColor(sec.color); h2.textContent = sec.title;
     const prog = document.createElement('div'); prog.className = 'prog-wrap';
     const fill = document.createElement('div'); fill.className = 'prog-fill'; fill.id = 'p_' + sec.id; fill.style.background = sec.color;
     prog.appendChild(fill); left.appendChild(h2); left.appendChild(prog);
-    const badge = document.createElement('div'); badge.className = 'sec-pts'; badge.style.color = lighten(sec.color); badge.textContent = sec.eggs.length + ' pts';
+    const badge = document.createElement('div'); badge.className = 'sec-pts'; badge.style.color = sectionColor(sec.color); badge.textContent = sec.eggs.length + ' pts';
     hdr.appendChild(left); hdr.appendChild(badge); wrap.appendChild(hdr);
     sec.eggs.forEach((egg, ei) => {
       const card = document.createElement('div'); card.className = 'egg-card'; card.id = 'c_' + sec.id + '_' + ei;
@@ -638,7 +648,7 @@ function updateStrip() {
   const strip = document.getElementById('scoreStrip'); strip.innerHTML = '';
   PLAYERS.forEach(p => {
     const chip = document.createElement('div'); chip.className = 'score-chip';
-    chip.style.borderColor = p.color; chip.style.color = p.color;
+    chip.style.borderColor = themeColor(p.color); chip.style.color = themeColor(p.color);
     chip.innerHTML = p.emoji + ' ' + p.name.slice(0, 6) + ': ' + playerTotal(p.id) + '<span class="edit-hint">✏️</span>';
     chip.onclick = openPlayerSettings;
     strip.appendChild(chip);
@@ -704,7 +714,7 @@ function openPlayerSettings() {
     const row = document.createElement('div'); row.className = 'player-edit-row';
     row.innerHTML = `
       <div class="player-color-dot" style="background:${p.color}"></div>
-      <div class="player-edit-label" style="color:${p.color}">${p.name}</div>
+      <div class="player-edit-label" style="color:${themeColor(p.color)}">${p.name}</div>
       <input class="emoji-input" type="text" maxlength="4" inputmode="text" autocomplete="off" value="${p.emoji}" id="ei_${i}">
     `;
     rows.appendChild(row);
@@ -740,23 +750,23 @@ function buildScorecard() {
   const hr = document.createElement('div'); hr.className = 'sc-hdr-row';
   hr.innerHTML = '<div class="sc-zone" style="font-weight:700">Location</div>';
   const hs = document.createElement('div'); hs.className = 'sc-scores';
-  PLAYERS.forEach(p => { const v = document.createElement('div'); v.className = 'sc-val'; v.style.color = p.color; v.textContent = abbr(p.name); hs.appendChild(v); });
+  PLAYERS.forEach(p => { const v = document.createElement('div'); v.className = 'sc-val'; v.style.color = themeColor(p.color); v.textContent = abbr(p.name); hs.appendChild(v); });
   hr.appendChild(hs); el.appendChild(hr);
 
   function renderGroup(secs, label, color) {
-    const t = document.createElement('div'); t.className = 'sc-section-title'; t.style.color = lighten(color); t.textContent = label; el.appendChild(t);
+    const t = document.createElement('div'); t.className = 'sc-section-title'; t.style.color = sectionColor(color); t.textContent = label; el.appendChild(t);
     const sub = new Array(PLAYERS.length).fill(0);
     secs.forEach(sec => {
       const r = document.createElement('div'); r.className = 'sc-row';
       const z = document.createElement('div'); z.className = 'sc-zone'; z.textContent = sec.title.replace(/\(.*?\)/g, '').trim().slice(0, 44); r.appendChild(z);
       const s = document.createElement('div'); s.className = 'sc-scores';
-      PLAYERS.forEach((p, i) => { const n = sec.eggs.filter((_, ei) => ck(sec.id, ei, p.id)).length; sub[i] += n; const v = document.createElement('div'); v.className = 'sc-val'; v.style.color = p.color; v.textContent = n || '—'; s.appendChild(v); });
+      PLAYERS.forEach((p, i) => { const n = sec.eggs.filter((_, ei) => ck(sec.id, ei, p.id)).length; sub[i] += n; const v = document.createElement('div'); v.className = 'sc-val'; v.style.color = themeColor(p.color); v.textContent = n || '—'; s.appendChild(v); });
       r.appendChild(s); el.appendChild(r);
     });
     const sr = document.createElement('div'); sr.className = 'sc-row sub';
-    const sz = document.createElement('div'); sz.className = 'sc-zone'; sz.style.color = lighten(color); sz.textContent = 'Subtotal'; sr.appendChild(sz);
+    const sz = document.createElement('div'); sz.className = 'sc-zone'; sz.style.color = sectionColor(color); sz.textContent = 'Subtotal'; sr.appendChild(sz);
     const ss = document.createElement('div'); ss.className = 'sc-scores';
-    PLAYERS.forEach((p, i) => { const v = document.createElement('div'); v.className = 'sc-val'; v.style.color = p.color; v.textContent = sub[i]; ss.appendChild(v); });
+    PLAYERS.forEach((p, i) => { const v = document.createElement('div'); v.className = 'sc-val'; v.style.color = themeColor(p.color); v.textContent = sub[i]; ss.appendChild(v); });
     sr.appendChild(ss); el.appendChild(sr); return sub;
   }
 
@@ -774,7 +784,7 @@ function buildScorecard() {
       const r = document.createElement('div'); r.className = 'sc-row';
       const z = document.createElement('div'); z.className = 'sc-zone'; z.textContent = (p ? p.emoji + ' ' : '') + f.desc.slice(0, 36); r.appendChild(z);
       const s = document.createElement('div'); s.className = 'sc-scores';
-      PLAYERS.forEach((pl, i) => { if (f.pid === pl.id) bTotals[i] += 2; const v = document.createElement('div'); v.className = 'sc-val'; v.style.color = pl.color; v.textContent = f.pid === pl.id ? '+2' : '—'; s.appendChild(v); });
+      PLAYERS.forEach((pl, i) => { if (f.pid === pl.id) bTotals[i] += 2; const v = document.createElement('div'); v.className = 'sc-val'; v.style.color = themeColor(pl.color); v.textContent = f.pid === pl.id ? '+2' : '—'; s.appendChild(v); });
       r.appendChild(s); el.appendChild(r);
     });
   }
@@ -783,7 +793,7 @@ function buildScorecard() {
   const tr = document.createElement('div'); tr.className = 'sc-row total';
   const tz = document.createElement('div'); tz.className = 'sc-zone'; tz.style.color = 'var(--gold)'; tz.textContent = '⭐ GRAND TOTAL'; tr.appendChild(tz);
   const ts = document.createElement('div'); ts.className = 'sc-scores';
-  PLAYERS.forEach((p, i) => { const v = document.createElement('div'); v.className = 'sc-val'; v.style.color = p.color; v.textContent = grand[i]; v.style.fontSize = '15px'; ts.appendChild(v); });
+  PLAYERS.forEach((p, i) => { const v = document.createElement('div'); v.className = 'sc-val'; v.style.color = themeColor(p.color); v.textContent = grand[i]; v.style.fontSize = '15px'; ts.appendChild(v); });
   tr.appendChild(ts); el.appendChild(tr);
 
   const maxScore = Math.max(...grand);
@@ -823,8 +833,8 @@ function buildPassAlong() {
   const scoreRows = ranked.map(({ p, score }, rank) => {
     const medal = rank === 0 && score > 0 ? ' 🥇' : '';
     return `<div class="pa-score-row">
-      <div class="pa-score-name"><span>${p.emoji}</span><span style="color:${p.color}">${p.name}</span></div>
-      <div class="pa-score-pts" style="color:${p.color}">${score}${medal}</div>
+      <div class="pa-score-name"><span>${p.emoji}</span><span style="color:${themeColor(p.color)}">${p.name}</span></div>
+      <div class="pa-score-pts" style="color:${themeColor(p.color)}">${score}${medal}</div>
     </div>`;
   }).join('');
 
@@ -910,6 +920,7 @@ function applyTheme(t) {
   document.body.classList.toggle('light', t === 'light');
   const btn = document.getElementById('themeToggle');
   if (btn) btn.textContent = t === 'light' ? '🌙' : '☀️';
+  if (PLAYERS.length) updateStrip();
 }
 function cycleTheme() {
   const next = document.body.classList.contains('light') ? 'dark' : 'light';
