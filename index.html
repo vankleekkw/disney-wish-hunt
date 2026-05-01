@@ -183,6 +183,12 @@ body.light .pa-tip{background:rgba(0,60,200,0.06);border-color:rgba(0,80,200,0.1
 .pa-score-row:last-of-type{border-bottom:none;}
 .pa-score-name{display:flex;align-items:center;gap:8px;}
 .pa-score-pts{font-size:15px;}
+.pa-facts{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:20px;text-align:left;}
+.pa-facts-title{font-family:'Cinzel',serif;font-size:12px;color:var(--gold);letter-spacing:.06em;margin-bottom:12px;text-align:center;}
+.pa-fact-row{padding:7px 0;border-bottom:1px solid var(--divider);}
+.pa-fact-row:last-of-type{border-bottom:none;}
+.pa-fact-name{font-size:12px;font-weight:700;}
+.pa-fact-desc{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.5;}
 .pa-credit{font-size:11px;color:var(--muted);line-height:1.9;border-top:1px solid var(--border);padding-top:16px;margin-top:4px;}
 .pa-credit strong{color:var(--gold-lt);font-size:12px;}
 </style>
@@ -310,7 +316,6 @@ const FAMILY_SECS = [
     ['Rapunzel & Pascal on the Stern','Back of ship — her hair frames "Disney Wish" as she paints it; Pascal grins alongside'],
     ['Captain Minnie Mouse on the Bow','Front of ship — first female Disney character to captain a DCL vessel'],
     ['Hidden Mickeys in Bow Scroll Pattern','The decorative hull scroll hides Mickey & Pluto silhouettes — use binoculars!'],
-    ['Fun Fact: Rapunzel = 1st Princess on a DCL Stern','Prior sterns: Goofy, Donald+Huey, Sorcerer Mickey, Dumbo, Peter Pan & Hook'],
   ]},
   { id:'grandhall', title:'Deck 3 — The Grand Hall', color:'#6b2d8b', eggs:[
     ['Chandelier = Cinderella\'s Dress Upside-Down','Look UP the moment you enter — the Fairy Godmother\'s transformation spell'],
@@ -357,14 +362,12 @@ const FAMILY_SECS = [
     ['Train Ceiling Beam Motifs','Beam artwork includes locomotives — Walt Disney\'s lifelong love of trains'],
     ['Small-Town Stall Names','Names reference Marceline, Missouri and Walt\'s Americana inspirations'],
     ['Mickey Black-and-White Era Art Panels','Panels themed after Mickey\'s first animated shorts — 1920s–30s style'],
-    ['Named After Walt\'s Actual Hometown','Marceline, Missouri is where Walt Disney grew up — whole venue honors that'],
   ]},
   { id:'throughout', title:'Bibbidi Bobbidi Boutique & Throughout', color:'#b22222', eggs:[
     ['Cinderella Castle Mural in Boutique','Perfect photo spot — castle shimmers in the distance behind the makeover chair'],
     ['Hidden Mickeys in Stateroom Carpets','Check YOUR cabin floor — Mickey silhouettes woven into the carpet pattern'],
     ['Tangled Sun Icon (Multiple Locations)','Rapunzel\'s kingdom sun symbol appears in various spots around the ship'],
     ['Shell & Owl Details in Corridors','Nods to other Disney princesses hidden throughout hallway decorations'],
-    ['Free Ship Tour (Ask Guest Services!)','Disney crew leads a tour covering dozens more secrets — check the Navigator app!'],
   ]},
 ];
 
@@ -372,7 +375,6 @@ const NIGHT_SECS = [
   { id:'nightingales', title:'Deck 3 — Nightingale\'s Piano Bar', color:'#3d1a5c', eggs:[
     ['Bubble Chandelier = "Sing Sweet Nightingale" Scene','Soap bubble chandelier recreates Cinderella\'s cleaning scene — look up immediately'],
     ['Sheet Music Etched INTO Every Bubble','Notes aren\'t random — actual sheet music for "Oh Sing Sweet Nightingale"'],
-    ['Rose Gold Accents Throughout','Color palette ties to Cinderella\'s enchantment theme — rose gold everywhere'],
   ]},
   { id:'bayou', title:'Deck 3 — The Bayou (Princess & the Frog)', color:'#1a5c38', eggs:[
     ['Firefly Lights in the Magnolia Canopy Ceiling','Hundreds of tiny lights simulate fireflies through a magnolia blossom canopy'],
@@ -381,12 +383,10 @@ const NIGHT_SECS = [
     ['Live Jazz Stage Evokes New Orleans','Stage design is themed to evoke New Orleans — check every detail'],
   ]},
   { id:'hyperspace', title:'Deck 3 — Star Wars: Hyperspace Lounge', color:'#001f5b', eggs:[
-    ['Viewport Jumps to Hyperspace Every 7–10 Min','Entire back wall transitions to new Star Wars planets — wait for it!'],
     ['Mustafar, Endor & Tatooine Visible','Multiple planets cycle through the viewport — spot and name each one'],
     ['Millennium Falcon Flies Past Near Tatooine','Keep watching — Han Solo\'s ship makes a cameo near Tatooine'],
     ['Resistance A-Wings & Mining Guild Freighters','Multiple Star Wars ship types fly past in the background'],
     ['Holotube with Holographic Ship Models','Interactive holographic display — ask the bartender about it'],
-    ['Hyperspace Transition Synced to Ship\'s Motion','Jump moves in sync with the actual ship to prevent motion sickness'],
     ['"Cookie" Tuggs\' Ship in the Viewport','Strono "Cookie" Tuggs\' ship from Galaxy\'s Edge hidden among passing vessels'],
   ]},
   { id:'luna', title:'Decks 4–5 — Luna Nightclub', color:'#6b2d8b', eggs:[
@@ -415,7 +415,6 @@ const NIGHT_SECS = [
   { id:'rose', title:'Deck 12 — The Rose, Enchante & Palo', color:'#c9a84c', eggs:[
     ['Enchanted Rose Centerpiece','Full-scale replica of the enchanted rose from Beauty and the Beast'],
     ['Enchanted Mirror from Beauty and the Beast','The famous magic mirror is also replicated in the venue'],
-    ['Bar Top Shifts Gold (Day) to Crimson (Night)','Hand-polished marble changes hue with the ambient lighting'],
     ['Cogsworth Gear Motifs on Chair Backs','Clockwork gears reference Cogsworth — check every chair back'],
     ['Hidden Mickey in Clock Gears at Dusk','Gear pattern forms a Hidden Mickey — only visible when backlit at dusk'],
     ['Clock Painting Hands Set to 19:22','Wall painting timepiece hints at Disney\'s centennial inspiration for the Wish'],
@@ -444,6 +443,16 @@ const ISLAND_SECS = [
 ];
 
 const ALL_SECS = [...FAMILY_SECS, ...NIGHT_SECS, ...ISLAND_SECS];
+
+const SHIP_FACTS = [
+  ['🎨 Rapunzel Was the First Princess on a DCL Stern','Every prior Disney Cruise ship featured a male character on the stern — Goofy, Donald, Sorcerer Mickey, Dumbo, Peter Pan, and Hook. The Wish broke tradition with Rapunzel.'],
+  ['🏡 Marceline Market Honors Walt\'s Hometown','Marceline, Missouri is where Walt Disney grew up. The entire venue is a tribute to his small-town Americana roots — even the stall names reference real Marceline locations.'],
+  ['🌹 The Rose Bar\'s Top Shifts Gold to Crimson','The hand-polished marble bar changes hue across the day — warm gold in daylight, deep crimson at night — timed to the ambient lighting of the Enchante experience.'],
+  ['🌈 Rose Gold Is Everywhere in Nightingale\'s','The entire Nightingale\'s color palette — rose gold fixtures, trim, and lighting — ties to Cinderella\'s enchantment theme. It\'s intentional, not just decorative.'],
+  ['🚀 The Hyperspace Jump Syncs to the Ship\'s Motion','The jump-to-lightspeed effect in the Hyperspace Lounge is calibrated to the actual motion of the ship to prevent guests from feeling disoriented or motion sick.'],
+  ['🌟 The Viewport Jumps to Hyperspace Every 7–10 Minutes','The entire back wall of the Hyperspace Lounge transitions to new Star Wars planets on a repeating cycle. Grab a drink and wait — it\'s worth it.'],
+  ['🗺️ Free Ship Tour from Guest Services','Disney crew leads an in-depth tour covering dozens more hidden secrets not in this hunt. Check the Navigator app or ask at Guest Services for the current schedule!'],
+];
 
 // ─────────────────────────────────────────
 //  STATE
@@ -870,6 +879,10 @@ function buildPassAlong() {
     </div>`;
   }).join('');
 
+  const factRows = SHIP_FACTS.map(([name, desc]) =>
+    `<div class="pa-fact-row"><div class="pa-fact-name">${name}</div><div class="pa-fact-desc">${desc}</div></div>`
+  ).join('');
+
   el.innerHTML = `
     <div class="pa-title">📲 Share the Hunt!</div>
     <div class="pa-sub">Scan to start your own fresh game<br>on your group's own device</div>
@@ -886,6 +899,10 @@ function buildPassAlong() {
     <div class="pa-scores">
       <div class="pa-scores-title">🌙 Parent Bonus — Nightclubs</div>
       ${nightRows}
+    </div>
+    <div class="pa-facts">
+      <div class="pa-facts-title">💡 Did You Know?</div>
+      ${factRows}
     </div>
     <div class="pa-credit">${CREDIT_LINE}</div>
   `;
