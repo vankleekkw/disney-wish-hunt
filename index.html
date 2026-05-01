@@ -25,7 +25,7 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--text);min-he
 .score-chip:active{opacity:.7;}
 .score-chip .edit-hint{font-size:8px;opacity:.6;margin-left:2px;}
 .tabs{display:flex;border-bottom:1px solid var(--border);overflow-x:auto;}
-.tab{flex:1;padding:9px 4px;text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;min-width:0;}
+.tab{flex:1;padding:9px 2px;text-align:center;font-size:9px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;min-width:0;}
 .tab.active{color:var(--gold);border-bottom-color:var(--gold);}
 
 /* PANELS */
@@ -101,10 +101,10 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--text);min-he
 .setup-color-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
 .setup-name-input{flex:1;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:var(--text);font-family:'Lato',sans-serif;font-size:13px;padding:7px 10px;outline:none;min-width:0;}
 .setup-name-input:focus{border-color:var(--gold);}
-.emoji-input{width:46px;height:38px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;font-size:20px;text-align:center;color:var(--text);cursor:pointer;-webkit-appearance:none;outline:none;padding:0;flex-shrink:0;}
+.emoji-input{width:34px;height:34px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;font-size:17px;text-align:center;color:var(--text);cursor:pointer;-webkit-appearance:none;outline:none;padding:0;flex-shrink:0;}
 .emoji-input:focus{border-color:var(--gold);}
-.color-swatches{display:flex;gap:3px;flex-shrink:0;}
-.swatch{width:16px;height:16px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s;}
+.color-swatches{display:flex;gap:2px;flex-shrink:0;}
+.swatch{width:14px;height:14px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s;}
 .swatch.sel{border-color:#fff;transform:scale(1.3);}
 .setup-start-btn{display:block;width:100%;padding:14px;border-radius:11px;border:none;background:linear-gradient(135deg,var(--gold),#906010);color:#000;font-family:'Lato',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:22px;}
 
@@ -136,6 +136,8 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--text);min-he
 .d-btn.import{border:1px solid rgba(100,200,255,0.3);background:rgba(0,120,200,0.1);color:#aad4ff;}
 .d-note{font-size:10px;color:var(--muted);text-align:center;line-height:1.5;margin-bottom:10px;}
 .reset-btn{display:block;width:100%;margin-top:16px;padding:11px;background:transparent;border:1px solid rgba(255,80,80,0.25);border-radius:8px;color:rgba(255,100,100,0.55);font-family:'Lato',sans-serif;font-size:12px;font-weight:700;cursor:pointer;}
+.reinit-btn{display:block;width:100%;margin-top:8px;padding:10px;background:transparent;border:1px solid rgba(255,80,80,0.12);border-radius:8px;color:rgba(255,100,100,0.35);font-family:'Lato',sans-serif;font-size:11px;font-weight:700;cursor:pointer;}
+.reinit-btn-modal{display:block;width:100%;margin-top:10px;padding:10px;background:transparent;border:1px solid rgba(255,80,80,0.3);border-radius:8px;color:rgba(255,100,100,0.6);font-family:'Lato',sans-serif;font-size:12px;font-weight:700;cursor:pointer;}
 
 /* PASS ALONG / SHARE TAB */
 .passalong{padding:20px 16px 40px;text-align:center;}
@@ -209,6 +211,7 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--text);min-he
     <div class="emoji-hint">Tap any emoji box, then open your emoji keyboard<br>(iPhone: 🌐 key · Android: emoji button)</div>
     <div id="playerEditRows"></div>
     <button class="p-done-btn" onclick="savePlayerSettings()">Done ✓</button>
+    <button class="reinit-btn-modal" onclick="reinitializeGame()">⟳ Start New Group (wipes all progress &amp; setup)</button>
   </div>
 </div>
 
@@ -392,10 +395,12 @@ const NIGHT_SECS = [
 ];
 
 const ISLAND_SECS = [
-  { id:'cc_land', title:'On Land — Bars, BBQ & Observation Tower', color:'#2d6a4f', eggs:[
+  { id:'cc_mickeys', title:'Castaway Cay — Hidden Mickeys', color:'#2d6a4f', eggs:[
     ['Hidden Mickey at Heads Up Bar','3 coins under the laminated counter form a classic Mickey — near the red support pole, directly under the "D" in "HEADS"'],
     ['Hidden Mickey at Cookie\'s Too BBQ','Wall shelf Mickey made from plates/pans — above 5 horizontal plates, over the 2nd from right, partially behind the ceiling fan'],
     ['Hidden Mickey at Observation Tower','Climb to 2nd or 3rd deck — black classic Mickey on the RED motor housing of the pelican\'s bathtub fan'],
+  ]},
+  { id:'cc_landmarks', title:'Castaway Cay — Themed Areas & Landmarks', color:'#0077b6', eggs:[
     ['Mount Rustmore — Mickey, Pluto, Donald & Goofy','Four giant painted metal buoys: Mickey (mouse ears), Pluto, Donald, and Goofy (hat tower) — prime photo spot!'],
     ['Pelican Plunge — Flotsam & Jetsam Nautical Décor','The floating water slide platform is decorated with Flotsam and Jetsam from The Little Mermaid'],
     ['Olaf\'s Summertime Freeze Theming','Frozen drink stand near Pelican Point has Olaf and Sven themed décor and souvenir cup designs'],
@@ -766,9 +771,13 @@ function buildScorecard() {
   dr.appendChild(eb); dr.appendChild(ib); el.appendChild(dr);
   const dn = document.createElement('div'); dn.className = 'd-note'; dn.textContent = 'Export saves all progress + bonus finds as a .json file. Import restores from a previous export — useful when switching phones.'; el.appendChild(dn);
 
-  const rb = document.createElement('button'); rb.className = 'reset-btn'; rb.textContent = '↺  Reset All Progress (cannot be undone)';
-  rb.onclick = () => { if (confirm('Reset all progress? This cannot be undone.')) { localStorage.removeItem(STATE_KEY); localStorage.removeItem(BONUS_KEY); location.reload(); } };
+  const rb = document.createElement('button'); rb.className = 'reset-btn'; rb.textContent = '↺  Reset All Progress (keeps player setup)';
+  rb.onclick = () => { if (confirm('Reset all egg progress and bonus finds? Player setup is kept. This cannot be undone.')) { localStorage.removeItem(STATE_KEY); localStorage.removeItem(BONUS_KEY); location.reload(); } };
   el.appendChild(rb);
+
+  const ri = document.createElement('button'); ri.className = 'reinit-btn'; ri.textContent = '⟳  Start New Group (wipes everything including setup)';
+  ri.onclick = reinitializeGame;
+  el.appendChild(ri);
 }
 
 // ─────────────────────────────────────────
@@ -836,6 +845,18 @@ function importData() {
     reader.readAsText(e.target.files[0]);
   };
   inp.click();
+}
+
+// ─────────────────────────────────────────
+//  REINITIALIZE
+// ─────────────────────────────────────────
+function reinitializeGame() {
+  if (confirm('Start fresh for a new group?\n\nThis will wipe all egg progress, bonus finds, AND player setup. Cannot be undone.')) {
+    localStorage.removeItem(SETUP_KEY);
+    localStorage.removeItem(STATE_KEY);
+    localStorage.removeItem(BONUS_KEY);
+    location.reload();
+  }
 }
 
 // ─────────────────────────────────────────
