@@ -1,4 +1,4 @@
-const CACHE = 'wish-hunt-v5';
+const CACHE = 'wish-hunt-v6';
 const FILES = ['./', './index.html'];
 
 self.addEventListener('install', e => {
